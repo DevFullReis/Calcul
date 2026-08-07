@@ -1,155 +1,135 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora Simples</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-      background-color: #0f172a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .calculator {
-      background-color: #1e293b;
-      padding: 24px;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      width: 100%;
-      max-width: 320px;
-    }
-
-    #display {
-      width: 100%;
-      height: 60px;
-      background-color: #0f172a;
-      color: #f8fafc;
-      border: none;
-      border-radius: 10px;
-      font-size: 2rem;
-      text-align: right;
-      padding: 10px 15px;
-      margin-bottom: 20px;
-      outline: none;
-    }
-
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-
-    button {
-      height: 55px;
-      border: none;
-      border-radius: 12px;
-      font-size: 1.2rem;
-      font-weight: 600;
-      cursor: pointer;
-      background-color: #334155;
-      color: #f8fafc;
-      transition: all 0.2s ease;
-    }
-
-    button:hover {
-      background-color: #475569;
-    }
-
-    button:active {
-      transform: scale(0.95);
-    }
-
-    button.operator {
-      background-color: #3b82f6;
-    }
-
-    button.operator:hover {
-      background-color: #2563eb;
-    }
-
-    button.clear {
-      background-color: #ef4444;
-    }
-
-    button.clear:hover {
-      background-color: #dc2626;
-    }
-
-    button.equal {
-      background-color: #10b981;
-      grid-column: span 2;
-    }
-
-    button.equal:hover {
-      background-color: #059669;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta API - T_DidQty</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        h2 {
+            color: #333;
+        }
+        .busca-container {
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .resultado-box {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 5px solid #007bff;
+            white-space: pre-wrap; /* Mantém a formatação caso venha JSON espalhado */
+            font-family: monospace;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="calculator">
-    <input type="text" id="display" readonly placeholder="0">
-    <div class="buttons">
-      <button class="clear" onclick="clearDisplay()">C</button>
-      <button onclick="appendValue('/')" class="operator">÷</button>
-      <button onclick="appendValue('*')" class="operator">×</button>
-      <button onclick="deleteLast()" class="operator">⌫</button>
-
-      <button onclick="appendValue('7')">7</button>
-      <button onclick="appendValue('8')">8</button>
-      <button onclick="appendValue('9')">9</button>
-      <button onclick="appendValue('-')" class="operator">-</button>
-
-      <button onclick="appendValue('4')">4</button>
-      <button onclick="appendValue('5')">5</button>
-      <button onclick="appendValue('6')">6</button>
-      <button onclick="appendValue('+')" class="operator">+</button>
-
-      <button onclick="appendValue('1')">1</button>
-      <button onclick="appendValue('2')">2</button>
-      <button onclick="appendValue('3')">3</button>
-      <button onclick="calculate()" class="equal">=</button>
-
-      <button onclick="appendValue('0')" style="grid-column: span 2;">0</button>
-      <button onclick="appendValue('.')">.</button>
+    <h2>Consulta de Quantidades (T_DidQty)</h2>
+    
+    <div class="busca-container">
+        <!-- Input pré-preenchido com o seu exemplo para facilitar o teste -->
+        <input type="text" id="idConsulta" value="1148213410031004" placeholder="Digite o ID para consulta">
+        <button onclick="buscarDados()">Consultar</button>
     </div>
-  </div>
 
-  <script>
-    const display = document.getElementById('display');
+    <!-- Mensagens de status (Carregando / Erro) -->
+    <div id="status"></div>
 
-    function appendValue(val) {
-      display.value += val;
-    }
+    <!-- Container para exibir o resultado -->
+    <div id="resultado-container" style="display: none;">
+        <h3>Resultado do Servidor:</h3>
+        <pre id="resultado-conteudo" class="resultado-box"></pre>
+    </div>
 
-    function clearDisplay() {
-      display.value = '';
-    }
+    <script>
+        async function buscarDados() {
+            const id = document.getElementById('idConsulta').value.trim();
+            const statusDiv = document.getElementById('status');
+            const resultadoContainer = document.getElementById('resultado-container');
+            const resultadoConteudo = document.getElementById('resultado-conteudo');
 
-    function deleteLast() {
-      display.value = display.value.slice(0, -1);
-    }
+            if (!id) {
+                statusDiv.className = 'error';
+                statusDiv.innerText = 'Por favor, insira um ID para consulta.';
+                return;
+            }
 
-    function calculate() {
-      try {
-        if (display.value) {
-          display.value = eval(display.value);
+            // Monta a URL exatamente igual ao exemplo do curl
+            const url = `http://brmanm1appc1/neximapi/api/T_DidQty/${id}`;
+
+            // Resetando a tela
+            statusDiv.className = 'loading';
+            statusDiv.innerText = 'Buscando informações...';
+            resultadoContainer.style.display = 'none';
+            resultadoConteudo.innerText = '';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'accept': 'text/plain' // Define o header idêntico ao curl
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+                }
+
+                // Lemos como texto puro (.text()) já que o accept é text/plain
+                const textoRetornado = await response.text();
+
+                statusDiv.innerText = '';
+                
+                // Tenta formatar caso o texto seja na verdade um JSON, senão exibe o texto bruto
+                try {
+                    const objetoJson = JSON.parse(textoRetornado);
+                    resultadoConteudo.innerText = JSON.stringify(objetoJson, null, 4);
+                } catch (e) {
+                    resultadoConteudo.innerText = textoRetornado;
+                }
+
+                resultadoContainer.style.display = 'block';
+
+            } catch (erro) {
+                console.error('Erro ao buscar dados:', erro);
+                statusDiv.className = 'error';
+                statusDiv.innerText = `Falha ao consultar a API. Motivo: ${erro.message}`;
+            }
         }
-      } catch (error) {
-        display.value = 'Erro';
-        setTimeout(() => clearDisplay(), 1500);
-      }
-    }
-  </script>
+    </script>
 </body>
 </html>
