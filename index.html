@@ -3,133 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta API - T_DidQty</title>
+    <title>Consulta de OV - Supabase</title>
+    <!-- Importando o cliente do Supabase via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f9;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         h2 {
             color: #333;
         }
-        .busca-container {
+        .search-box {
             margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
         }
         input {
+            flex: 1;
             padding: 10px;
-            font-size: 16px;
-            width: 250px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            font-size: 16px;
         }
         button {
-            padding: 10px 15px;
-            font-size: 16px;
-            background-color: #28a745;
+            padding: 10px 20px;
+            background-color: #3ecf8e; /* Cor padrão do Supabase */
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
         button:hover {
-            background-color: #218838;
+            background-color: #34b27b;
         }
-        .resultado-box {
-            background-color: white;
-            padding: 15px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-left: 5px solid #007bff;
-            white-space: pre-wrap; /* Mantém a formatação caso venha JSON espalhado */
-            font-family: monospace;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f8f9fa;
         }
         .error {
             color: red;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .loading {
-            color: #666;
-            font-style: italic;
             margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
-    <h2>Consulta de Quantidades (T_DidQty)</h2>
+<div class="container">
+    <h2>Consulta de Ordens de Venda (OV)</h2>
     
-    <div class="busca-container">
-        <!-- Input pré-preenchido com o seu exemplo para facilitar o teste -->
-        <input type="text" id="idConsulta" value="1148213410031004" placeholder="Digite o ID para consulta">
-        <button onclick="buscarDados()">Consultar</button>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Digite o número da OV ou FERTL...">
+        <button onclick="consultarOV()">Consultar</button>
     </div>
 
-    <!-- Mensagens de status (Carregando / Erro) -->
-    <div id="status"></div>
+    <div id="errorMsg" class="error"></div>
 
-    <!-- Container para exibir o resultado -->
-    <div id="resultado-container" style="display: none;">
-        <h3>Resultado do Servidor:</h3>
-        <pre id="resultado-conteudo" class="resultado-box"></pre>
-    </div>
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>Fert</th>
+                <th>Assembly</th>
+                <th>Cor</th>
+                <th>OV</th>
+                <th>Qtd</th>
+                <th>Validado</th>
+                <th>Container</th>
+                <th>Lacre</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr>
+                <td colspan="9" style="text-align: center;">Nenhum dado consultado ainda.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
-    <script>
-        async function buscarDados() {
-            const id = document.getElementById('idConsulta').value.trim();
-            const statusDiv = document.getElementById('status');
-            const resultadoContainer = document.getElementById('resultado-container');
-            const resultadoConteudo = document.getElementById('resultado-conteudo');
+<script>
+    // 1. Substitua com as suas credenciais do painel do Supabase (Project Settings > API)
+    const SUPABASE_URL = 'https://lbttcrnayppkzaiibclk.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxidHRjcm5heXBwa3phaWliY2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NTI3NDQsImV4cCI6MjA2NzEyODc0NH0.sAR8jZMqoiNeLlV7cVEcKxEz3vObrPv4-APmTI3_97g';
 
-            if (!id) {
-                statusDiv.className = 'error';
-                statusDiv.innerText = 'Por favor, insira um ID para consulta.';
+    // Inicializa o cliente do Supabase
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function consultarOV() {
+        const termo = document.getElementById('searchInput').value.trim();
+        const tableBody = document.getElementById('tableBody');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        errorMsg.textContent = '';
+        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Carregando...</td></tr>';
+
+        try {
+            // Constrói a consulta na tabela 'ov'
+            let query = supabaseClient.from('ov').select('*');
+
+            // Se o usuário digitou algo, filtra por OV ou Fert
+            if (termo !== '') {
+                query = query.or(`ov.ilike.%${termo}%,fert.ilike.%${termo}%`);
+            }
+
+            const { data, error } = await query.limit(50);
+
+            if (error) throw error;
+
+            // Limpa a tabela
+            tableBody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Nenhum registro encontrado.</td></tr>';
                 return;
             }
 
-            // Monta a URL exatamente igual ao exemplo do curl
-            const url = `http://brmanm1appc1/neximapi/api/T_DidQty/${id}`;
+            // Preenche a tabela com os resultados
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.fert}</td>
+                    <td>${item.assembly}</td>
+                    <td>${item.cor}</td>
+                    <td>${item.ov}</td>
+                    <td>${item.qntd}</td>
+                    <td>${item.validado}</td>
+                    <td>${item.container}</td>
+                    <td>${item.lacre}</td>
+                    <td>${new Date(item.data).toLocaleString('pt-BR')}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
 
-            // Resetando a tela
-            statusDiv.className = 'loading';
-            statusDiv.innerText = 'Buscando informações...';
-            resultadoContainer.style.display = 'none';
-            resultadoConteudo.innerText = '';
-
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'accept': 'text/plain' // Define o header idêntico ao curl
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
-                }
-
-                // Lemos como texto puro (.text()) já que o accept é text/plain
-                const textoRetornado = await response.text();
-
-                statusDiv.innerText = '';
-                
-                // Tenta formatar caso o texto seja na verdade um JSON, senão exibe o texto bruto
-                try {
-                    const objetoJson = JSON.parse(textoRetornado);
-                    resultadoConteudo.innerText = JSON.stringify(objetoJson, null, 4);
-                } catch (e) {
-                    resultadoConteudo.innerText = textoRetornado;
-                }
-
-                resultadoContainer.style.display = 'block';
-
-            } catch (erro) {
-                console.error('Erro ao buscar dados:', erro);
-                statusDiv.className = 'error';
-                statusDiv.innerText = `Falha ao consultar a API. Motivo: ${erro.message}`;
-            }
+        } catch (error) {
+            console.error('Erro na consulta:', error.message);
+            errorMsg.textContent = 'Erro ao consultar dados: ' + error.message;
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Erro ao carregar.</td></tr>';
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
