@@ -1,168 +1,300 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de OV - Supabase</title>
-    <!-- Importando o cliente do Supabase via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: #333;
-        }
-        .search-box {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #3ecf8e; /* Cor padrão do Supabase */
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #34b27b;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            text-align: left;
-            font-size: 14px;
-        }
-        th {
-            background-color: #f8f9fa;
-        }
-        .error {
-            color: red;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta b_data - Supabase</title>
+  <style>
+    :root {
+      --primary-color: #0284c7;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #334155;
+      --border-color: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+
+    #status {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-bottom: 16px;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: transform 0.1s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .serial-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .week-badge {
+      font-size: 0.75rem;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #475569;
+    }
+
+    .card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 0.875rem;
+    }
+
+    .field-label {
+      font-weight: 600;
+      color: #64748b;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .field-value {
+      color: #1e293b;
+      word-break: break-word;
+    }
+
+    .full-width {
+      grid-column: span 2;
+    }
+
+    .obs-box {
+      margin-top: 8px;
+      padding: 8px;
+      background: #fffbebf8;
+      border: 1px solid #fef08a;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: #713f12;
+    }
+  </style>
+
+  <!-- SDK do Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div class="container">
-    <h2>Consulta de Ordens de Venda (OV)</h2>
-    
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Digite o número da OV ou FERTL...">
-        <button onclick="consultarOV()">Consultar</button>
+  <header>
+    <h1>Registros do Banco (`b_data`)</h1>
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Filtrar por Serial, OV, Lacre, Fert..." oninput="filtrarLocalmente()">
     </div>
+  </header>
 
-    <div id="errorMsg" class="error"></div>
+  <div id="status">Carregando registros...</div>
+  <div id="grid" class="grid-container"></div>
 
-    <table id="resultTable">
-        <thead>
-            <tr>
-                <th>Fert</th>
-                <th>Assembly</th>
-                <th>Cor</th>
-                <th>OV</th>
-                <th>Qtd</th>
-                <th>Validado</th>
-                <th>Container</th>
-                <th>Lacre</th>
-                <th>Data</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <tr>
-                <td colspan="9" style="text-align: center;">Nenhum dado consultado ainda.</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+  <script>
+    // Configurações do Supabase
+    const SUPABASE_URL = "https://lbttcrnayppkzaiibclk.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxidHRjcm5heXBwa3phaWliY2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NTI3NDQsImV4cCI6MjA2NzEyODc0NH0.sAR8jZMqoiNeLlV7cVEcKxEz3vObrPv4-APmTI3_97g";
 
-<script>
-    // 1. Substitua com as suas credenciais do painel do Supabase (Project Settings > API)
-    const SUPABASE_URL = 'https://lbttcrnayppkzaiibclk.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxidHRjcm5heXBwa3phaWliY2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NTI3NDQsImV4cCI6MjA2NzEyODc0NH0.sAR8jZMqoiNeLlV7cVEcKxEz3vObrPv4-APmTI3_97g';
-
-    // Inicializa o cliente do Supabase
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let todosDados = []; // Guarda os dados em memória para o filtro instantâneo
 
-    async function consultarOV() {
-        const termo = document.getElementById('searchInput').value.trim();
-        const tableBody = document.getElementById('tableBody');
-        const errorMsg = document.getElementById('errorMsg');
-        
-        errorMsg.textContent = '';
-        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Carregando...</td></tr>';
+    async function carregarBData() {
+      const statusEl = document.getElementById("status");
 
-        try {
-            // Constrói a consulta na tabela 'ov'
-            let query = supabaseClient.from('ov').select('*');
+      try {
+        // Consulta a tabela b_data ordenando pela datahora mais recente
+        const { data, error } = await supabaseClient
+          .from("b_data")
+          .select("*")
+          .order("datahora", { ascending: false })
+          .limit(100); // Limite de 100 itens para performance
 
-            // Se o usuário digitou algo, filtra por OV ou Fert
-            if (termo !== '') {
-                query = query.or(`ov.ilike.%${termo}%,fert.ilike.%${termo}%`);
-            }
+        if (error) throw error;
 
-            const { data, error } = await query.limit(50);
+        todosDados = data || [];
 
-            if (error) throw error;
-
-            // Limpa a tabela
-            tableBody.innerHTML = '';
-
-            if (!data || data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Nenhum registro encontrado.</td></tr>';
-                return;
-            }
-
-            // Preenche a tabela com os resultados
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.fert}</td>
-                    <td>${item.assembly}</td>
-                    <td>${item.cor}</td>
-                    <td>${item.ov}</td>
-                    <td>${item.qntd}</td>
-                    <td>${item.validado}</td>
-                    <td>${item.container}</td>
-                    <td>${item.lacre}</td>
-                    <td>${new Date(item.data).toLocaleString('pt-BR')}</td>
-                `;
-                tableBody.appendChild(tr);
-            });
-
-        } catch (error) {
-            console.error('Erro na consulta:', error.message);
-            errorMsg.textContent = 'Erro ao consultar dados: ' + error.message;
-            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Erro ao carregar.</td></tr>';
+        if (todosDados.length === 0) {
+          statusEl.innerText = "Nenhum registro encontrado na tabela b_data.";
+          return;
         }
-    }
-</script>
 
+        statusEl.innerText = `Exibindo ${todosDados.length} registro(s) mais recente(s):`;
+        renderizarCartoes(todosDados);
+
+      } catch (err) {
+        console.error("Erro no Supabase:", err);
+        statusEl.innerText = "Erro ao buscar dados. Certifique-se de que o RLS (Row Level Security) está configurado com a política de SELECT na tabela 'b_data'.";
+        statusEl.style.color = "#dc2626";
+      }
+    }
+
+    function renderizarCartoes(lista) {
+      const gridEl = document.getElementById("grid");
+
+      gridEl.innerHTML = lista.map(item => {
+        // Formata a data e hora
+        const dataFormatada = item.datahora 
+          ? new Date(item.datahora).toLocaleString('pt-BR') 
+          : 'N/A';
+
+        return `
+          <div class="card">
+            <div class="card-header">
+              <span class="serial-badge">SN: ${escapeHtml(item.serial)}</span>
+              <span class="week-badge">Semana: ${escapeHtml(item.week)}</span>
+            </div>
+            
+            <div class="card-body">
+              <div>
+                <div class="field-label">FERT</div>
+                <div class="field-value">${escapeHtml(item.fert)}</div>
+              </div>
+
+              <div>
+                <div class="field-label">Cor</div>
+                <div class="field-value">${escapeHtml(item.cor)}</div>
+              </div>
+
+              <div>
+                <div class="field-label">Assembly</div>
+                <div class="field-value">${escapeHtml(item.assembly)}</div>
+              </div>
+
+              <div>
+                <div class="field-label">Container</div>
+                <div class="field-value">${escapeHtml(item.container)}</div>
+              </div>
+
+              <div>
+                <div class="field-label">OV</div>
+                <div class="field-value">${escapeHtml(item.ov)}</div>
+              </div>
+
+              <div>
+                <div class="field-label">Lacre</div>
+                <div class="field-value">${escapeHtml(item.lacre)}</div>
+              </div>
+
+              <div class="full-width">
+                <div class="field-label">Data/Hora</div>
+                <div class="field-value">${dataFormatada}</div>
+              </div>
+
+              ${item.obs ? `
+                <div class="full-width obs-box">
+                  <strong>Obs:</strong> ${escapeHtml(item.obs)}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Função de busca local/filtro na tela
+    function filtrarLocalmente() {
+      const termo = document.getElementById("searchInput").value.toLowerCase();
+      
+      const filtrados = todosDados.filter(item => {
+        return (
+          (item.serial && item.serial.toLowerCase().includes(termo)) ||
+          (item.fert && item.fert.toLowerCase().includes(termo)) ||
+          (item.ov && item.ov.toLowerCase().includes(termo)) ||
+          (item.lacre && item.lacre.toLowerCase().includes(termo)) ||
+          (item.container && item.container.toLowerCase().includes(termo))
+        );
+      });
+
+      document.getElementById("status").innerText = `Exibindo ${filtrados.length} de ${todosDados.length} registro(s):`;
+      renderizarCartoes(filtrados);
+    }
+
+    // Evita ataques de script (XSS) no HTML
+    function escapeHtml(str) {
+      if (!str) return 'N/A';
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Inicia a busca ao carregar a página
+    carregarBData();
+  </script>
 </body>
 </html>
