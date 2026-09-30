@@ -3,90 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consulta b_data - Vercel</title>
+  <title>Busca Específica - b_data</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #f8fafc;
       color: #334155;
       padding: 20px;
-      max-width: 900px;
+      max-width: 800px;
       margin: 0 auto;
     }
-    h1 {
-      color: #0f172a;
-      font-size: 1.5rem;
-      margin-bottom: 10px;
+    .search-box {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    input {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      flex: 1;
+      min-width: 180px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0369a1;
     }
     #status {
       font-weight: 600;
-      margin-bottom: 20px;
-      color: #0284c7;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 12px;
+      margin-bottom: 15px;
     }
     .card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .card-title {
-      font-weight: bold;
-      color: #0369a1;
-      margin-bottom: 8px;
-    }
-    .field {
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-    }
-    .field strong {
-      color: #64748b;
+      padding: 12px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h1>Registos da Tabela `b_data`</h1>
-  <div id="status">A carregar dados do servidor...</div>
-  <div id="grid" class="grid"></div>
+  <h1>Consulta por Container ou OV</h1>
+
+  <div class="search-box">
+    <input type="text" id="inputContainer" placeholder="Digite o Container (ex: CONT123)">
+    <input type="text" id="inputOV" placeholder="Digite a OV (ex: OV9876)">
+    <button onclick="buscar()">Pesquisar</button>
+  </div>
+
+  <div id="status">Digite um Container ou OV acima para buscar.</div>
+  <div id="resultados"></div>
 
   <script>
-    async function carregarDados() {
+    async function buscar() {
+      const containerVal = document.getElementById('inputContainer').value.trim();
+      const ovVal = document.getElementById('inputOV').value.trim();
       const statusEl = document.getElementById('status');
-      const gridEl = document.getElementById('grid');
+      const resultadosEl = document.getElementById('resultados');
+
+      if (!containerVal && !ovVal) {
+        statusEl.innerText = 'Preencha o campo Container ou OV para realizar a busca.';
+        statusEl.style.color = '#dc2626';
+        return;
+      }
+
+      statusEl.innerText = 'Consultando no servidor...';
+      statusEl.style.color = '#0284c7';
+      resultadosEl.innerHTML = '';
 
       try {
-        // Faz a chamada para a rota Serverless criada na Vercel
-        const resposta = await fetch('/api/consultar');
-        const dados = await resposta.json();
+        // Monta a URL com parâmetros de busca
+        const params = new URLSearchParams();
+        if (containerVal) params.append('container', containerVal);
+        if (ovVal) params.append('ov', ovVal);
+
+        const resposta = await fetch(`/api/consultar?${params.toString()}`);
+        const textoResposta = await resposta.text();
+        let dados;
+
+        try {
+          dados = JSON.parse(textoResposta);
+        } catch (e) {
+          throw new Error(`Resposta do servidor inválida: ${textoResposta.substring(0, 100)}...`);
+        }
 
         if (!resposta.ok) {
-          throw new Error(dados.error || 'Erro ao procurar dados');
+          throw new Error(dados.error || 'Erro ao realizar a consulta');
         }
 
         if (!dados || dados.length === 0) {
-          statusEl.innerText = 'Nenhum registo encontrado.';
+          statusEl.innerText = 'Nenhum registro encontrado para essa busca.';
+          statusEl.style.color = '#64748b';
           return;
         }
 
-        statusEl.innerText = `Total de registos carregados com segurança: ${dados.length}`;
+        statusEl.innerText = `Sucesso! ${dados.length} registro(s) encontrado(s):`;
+        statusEl.style.color = '#16a34a';
 
-        // Desenha os cartões no ecrã
-        gridEl.innerHTML = dados.map(item => `
+        resultadosEl.innerHTML = dados.map(item => `
           <div class="card">
-            <div class="card-title">Serial: ${item.serial || 'N/A'}</div>
-            <div class="field"><strong>FERT:</strong> ${item.fert || 'N/A'}</div>
-            <div class="field"><strong>Cor:</strong> ${item.cor || 'N/A'}</div>
-            <div class="field"><strong>Assembly:</strong> ${item.assembly || 'N/A'}</div>
-            <div class="field"><strong>Container:</strong> ${item.container || 'N/A'}</div>
-            <div class="field"><strong>OV:</strong> ${item.ov || 'N/A'}</div>
-            <div class="field"><strong>Lacre:</strong> ${item.lacre || 'N/A'}</div>
-            <div class="field"><strong>Semana:</strong> ${item.week || 'N/A'}</div>
+            <strong>Serial:</strong> ${item.serial} | 
+            <strong>FERT:</strong> ${item.fert} | 
+            <strong>Cor:</strong> ${item.cor} | 
+            <strong>Container:</strong> ${item.container} | 
+            <strong>OV:</strong> ${item.ov} | 
+            <strong>Lacre:</strong> ${item.lacre}
           </div>
         `).join('');
 
@@ -96,8 +132,6 @@
         statusEl.style.color = '#dc2626';
       }
     }
-
-    carregarDados();
   </script>
 </body>
 </html>
