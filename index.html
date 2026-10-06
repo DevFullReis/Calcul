@@ -134,3 +134,110 @@
       <span class="pagination-info" id="paginacaoInfo"></span>
       <div class="pagination-btns">
         <button class="btn-page" id="btnAnterior" onclick="mudarPagina(-1)">Anterior</button>
+        <button class="btn-page" id="btnProximo" onclick="mudarPagina(1)">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Variáveis globais para controle de estado
+    let todosDados = [];
+    let paginaAtual = 1;
+    const itensPorPagina = 10;
+
+    async function buscar() {
+      const containerVal = document.getElementById('inputContainer').value.trim();
+      const ovVal = document.getElementById('inputOV').value.trim();
+      const statusEl = document.getElementById('status');
+      const containerResultados = document.getElementById('containerResultados');
+
+      if (!containerVal && !ovVal) {
+        statusEl.innerText = 'Preencha o campo Container ou OV para realizar a busca.';
+        statusEl.style.color = '#dc2626';
+        containerResultados.style.display = 'none';
+        return;
+      }
+
+      statusEl.innerText = 'Consultando no servidor...';
+      statusEl.style.color = '#0284c7';
+      containerResultados.style.display = 'none';
+
+      try {
+        const params = new URLSearchParams();
+        if (containerVal) params.append('container', containerVal);
+        if (ovVal) params.append('ov', ovVal);
+
+        const resposta = await fetch(`/api/consultar?${params.toString()}`);
+        const textoResposta = await resposta.text();
+        let dados;
+
+        try {
+          dados = JSON.parse(textoResposta);
+        } catch (e) {
+          throw new Error(`Resposta do servidor inválida: ${textoResposta.substring(0, 100)}...`);
+        }
+
+        if (!resposta.ok) {
+          throw new Error(dados.error || 'Erro ao realizar a consulta');
+        }
+
+        if (!dados || dados.length === 0) {
+          statusEl.innerText = 'Nenhum registro encontrado para essa busca.';
+          statusEl.style.color = '#64748b';
+          return;
+        }
+
+        // Armazena todos os registros e reseta para a primeira página
+        todosDados = dados;
+        paginaAtual = 1;
+
+        statusEl.innerText = `Sucesso! ${dados.length} registro(s) encontrado(s):`;
+        statusEl.style.color = '#16a34a';
+
+        containerResultados.style.display = 'block';
+        renderizarTabela();
+
+      } catch (err) {
+        console.error(err);
+        statusEl.innerText = 'Erro: ' + err.message;
+        statusEl.style.color = '#dc2626';
+      }
+    }
+
+    function renderizarTabela() {
+      const corpoTabela = document.getElementById('tabelaCorpo');
+      const infoEl = document.getElementById('paginacaoInfo');
+      const btnAnterior = document.getElementById('btnAnterior');
+      const btnProximo = document.getElementById('btnProximo');
+
+      // Cálculo do slice dos dados
+      const inicio = (paginaAtual - 1) * itensPorPagina;
+      const fim = inicio + itensPorPagina;
+      const dadosPagina = todosDados.slice(inicio, fim);
+      const totalPaginas = Math.ceil(todosDados.length / itensPorPagina);
+
+      // Renderiza as linhas
+      corpoTabela.innerHTML = dadosPagina.map(item => `
+        <tr>
+          <td><strong>${item.serial || '-'}</strong></td>
+          <td>${item.fert || '-'}</td>
+          <td>${item.cor || '-'}</td>
+          <td>${item.container || '-'}</td>
+          <td>${item.ov || '-'}</td>
+          <td>${item.lacre || '-'}</td>
+        </tr>
+      `).join('');
+
+      // Atualiza estado dos botões e texto da página
+      infoEl.innerText = `Página ${paginaAtual} de ${totalPaginas} (${todosDados.length} itens no total)`;
+      btnAnterior.disabled = paginaAtual === 1;
+      btnProximo.disabled = paginaAtual === totalPaginas;
+    }
+
+    function mudarPagina(direcao) {
+      paginaAtual += direcao;
+      renderizarTabela();
+    }
+  </script>
+</body>
+</html>
