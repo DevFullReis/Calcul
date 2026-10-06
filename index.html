@@ -10,7 +10,7 @@
       --primary-dark: #003a60; 
       --accent-blue: #3CB4E5;  /* Azul Claro Jabil */
       --accent-green: #008A5E; /* Verde Jabil */
-      --danger: #e11d48;       /* Vermelho Erro */
+      --danger: #dc2626;       /* Vermelho Erro */
       --warning: #f59e0b;      /* Amarelo Alerta */
       --bg-color: #f4f6f9;
       --surface: #ffffff;
@@ -33,6 +33,20 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Estado de Erro Crítico (Tela Vermelha) */
+    body.error-state {
+      background-color: #fef2f2 !important;
+    }
+    body.error-state header {
+      background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%) !important;
+    }
+    body.error-state .card, 
+    body.error-state .results-wrapper, 
+    body.error-state .metric-card {
+      border-color: #fca5a5;
     }
 
     /* Header Corporativo Moderno */
@@ -41,6 +55,7 @@
       color: white;
       padding: 20px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: background 0.3s ease;
     }
 
     .header-content {
@@ -172,7 +187,7 @@
       background-color: #00704b;
     }
 
-    /* Métricas do Double Check */
+    /* Métricas */
     .metrics-bar {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -214,7 +229,6 @@
       margin-bottom: 16px;
       display: none;
     }
-
     .status-info { background: #e0f2fe; color: #0369a1; }
     .status-success { background: #dcfce7; color: #15803d; }
     .status-error { background: #ffe4e6; color: #be123c; }
@@ -257,9 +271,9 @@
 
     td {
       border-bottom: 1px solid var(--border);
+      cursor: pointer;
     }
 
-    /* Badges de Status do Item */
     .status-badge {
       display: inline-block;
       padding: 4px 10px;
@@ -269,28 +283,112 @@
       text-transform: uppercase;
     }
 
-    .badge-pendente {
-      background: #fef3c7;
-      color: #b45309;
+    .badge-pendente { background: #fef3c7; color: #b45309; }
+    .badge-ok { background: #dcfce7; color: #15803d; }
+    tr.row-checked { background-color: #f0fdf4; }
+
+    /* Modal / Pop-up de Detalhes e Erro Manual */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
     }
 
-    .badge-ok {
-      background: #dcfce7;
-      color: #15803d;
+    .modal-box {
+      background: white;
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
+      animation: modalPop 0.2s ease-out;
     }
 
-    tr.row-checked {
-      background-color: #f0fdf4;
+    @keyframes modalPop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
-    /* Responsive Mobile */
+    .modal-header {
+      padding: 16px 20px;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header.error-header {
+      background: var(--danger);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info-item label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: block;
+    }
+
+    .info-item span {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      text-align: right;
+    }
+
+    .btn-modal-close {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-manual-ack {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+    }
+    .btn-manual-ack:hover { background: #b91c1c; }
+
     @media (max-width: 768px) {
-      .steps-grid {
-        grid-template-columns: 1fr;
-      }
-      .metrics-bar {
-        grid-template-columns: 1fr;
-      }
+      .steps-grid, .metrics-bar { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -309,9 +407,7 @@
   </header>
 
   <main>
-    <!-- Etapas do Double Check -->
     <div class="steps-grid">
-      <!-- Passo 1: Carregar Lote/OV -->
       <div class="card">
         <div class="card-title">
           <span class="badge-step">1</span>
@@ -323,7 +419,6 @@
         </div>
       </div>
 
-      <!-- Passo 2: Biper Serial -->
       <div class="card">
         <div class="card-title">
           <span class="badge-step">2</span>
@@ -335,10 +430,8 @@
       </div>
     </div>
 
-    <!-- Feedback Visual de Alerta -->
     <div id="status"></div>
 
-    <!-- Painel de Métricas -->
     <div class="metrics-bar" id="painelMetricas" style="display: none;">
       <div class="metric-card">
         <div class="label">Total de Itens</div>
@@ -354,7 +447,6 @@
       </div>
     </div>
 
-    <!-- Tabela de Conferência -->
     <div id="resultadoContainer" class="results-wrapper">
       <div class="table-responsive">
         <table>
@@ -374,28 +466,46 @@
     </div>
   </main>
 
+  <!-- POP-UP / MODAL DE DETALHES -->
+  <div class="modal-overlay" id="modalDetalhes">
+    <div class="modal-box">
+      <div class="modal-header" id="modalHeaderTitulo">Detalhes do Item</div>
+      <div class="modal-body">
+        <div class="info-grid">
+          <div class="info-item"><label>Serial</label><span id="detalheSerial">-</span></div>
+          <div class="info-item"><label>FERT</label><span id="detalheFert">-</span></div>
+          <div class="info-item"><label>Cor</label><span id="detalheCor">-</span></div>
+          <div class="info-item"><label>OV / Container</label><span id="detalheOv">-</span></div>
+          <div class="info-item" style="grid-column: span 2;"><label>Lacre</label><span id="detalheLacre">-</span></div>
+        </div>
+        <div id="containerAcaoManual" style="display: none; margin-top: 15px;">
+          <p id="mensagemErroManual" style="color: var(--danger); font-weight: bold; margin-bottom: 12px; text-align: center; font-size: 0.95rem;"></p>
+          <button class="btn-manual-ack" onclick="resolverErroManual()">TOQUE MANUAL: RECONHECER ERRO</button>
+        </div>
+      </div>
+      <div class="modal-footer" id="modalFooterPadrao">
+        <button class="btn-modal-close" onclick="fecharModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let todosDados = [];
     let seriaisValidados = new Set();
+    let emEstadoDeErro = false;
 
     function exibirStatus(mensagem, tipo) {
       const statusEl = document.getElementById('status');
       statusEl.style.display = 'block';
       statusEl.innerText = mensagem;
       statusEl.className = '';
-      
       if (tipo === 'success') statusEl.classList.add('status-success');
       else if (tipo === 'error') statusEl.classList.add('status-error');
       else statusEl.classList.add('status-info');
     }
 
-    function tratarTeclaOV(e) {
-      if (e.key === 'Enter') carregarLote();
-    }
-
-    function tratarTeclaSerial(e) {
-      if (e.key === 'Enter') validarSerial();
-    }
+    function tratarTeclaOV(e) { if (e.key === 'Enter') carregarLote(); }
+    function tratarTeclaSerial(e) { if (e.key === 'Enter') validarSerial(); }
 
     async function carregarLote() {
       const valorBusca = document.getElementById('inputBusca').value.trim();
@@ -408,7 +518,7 @@
         return;
       }
 
-      exibirStatus('Carregando itens da OV/Container...', 'info');
+      exibirStatus('Carregando itens...', 'info');
       resultadoContainer.style.display = 'none';
       painelMetricas.style.display = 'none';
       seriaisValidados.clear();
@@ -426,61 +536,110 @@
         if (!dados || dados.length === 0) {
           exibirStatus('Nenhum lote/item encontrado para esta OV ou Container.', 'error');
           inputSerial.disabled = true;
-          inputSerial.placeholder = "Aguardando carregamento da OV...";
           return;
         }
 
         todosDados = dados;
-        
-        // Habilita entrada de bip de serial
         inputSerial.disabled = false;
         inputSerial.placeholder = "Bipe o Serial do produto aqui...";
         inputSerial.focus();
 
-        exibirStatus(`Lote carregado com sucesso. Bipe os ${dados.length} seriais para validar.`, 'info');
-        
+        exibirStatus(`Lote carregado com sucesso. Bipe os ${dados.length} seriais.`, 'info');
         resultadoContainer.style.display = 'block';
         painelMetricas.style.display = 'grid';
-        
         atualizarTela();
-
       } catch (err) {
-        console.error(err);
-        exibirStatus('Erro ao carregar OV: ' + err.message, 'error');
+        exibirStatus('Erro ao carregar: ' + err.message, 'error');
       }
     }
 
     function validarSerial() {
+      if (emEstadoDeErro) return; // Bloqueia bipe até toque manual
+
       const inputSerial = document.getElementById('inputSerial');
       const serialBipado = inputSerial.value.trim();
-
       if (!serialBipado) return;
 
-      // Procura o serial na lista carregada
       const itemEncontrado = todosDados.find(item => 
         item.serial && item.serial.toLowerCase() === serialBipado.toLowerCase()
       );
 
       if (!itemEncontrado) {
-        exibirStatus(`DIVERGÊNCIA! O Serial "${serialBipado}" NÃO pertence a esta OV/Container!`, 'error');
-        tocarSomErro();
+        ativarTelaVermelha(`DIVERGÊNCIA! O Serial "${serialBipado}" NÃO pertence a esta OV!`);
       } else if (seriaisValidados.has(itemEncontrado.serial)) {
-        exibirStatus(`ALERTA: O Serial "${serialBipado}" JÁ foi bipado anteriormente!`, 'error');
-        tocarSomErro();
+        ativarTelaVermelha(`ALERTA: O Serial "${serialBipado}" JÁ foi bipado anteriormente!`);
       } else {
-        // Sucesso na validação do serial
         seriaisValidados.add(itemEncontrado.serial);
         exibirStatus(`OK! Serial "${itemEncontrado.serial}" validado com sucesso.`, 'success');
         atualizarTela();
 
-        // Checa se concluiu 100%
         if (seriaisValidados.size === todosDados.length) {
-          exibirStatus(`DOUBLE CHECK CONCLUÍDO! Todos os ${todosDados.length} itens foram conferidos com sucesso!`, 'success');
+          exibirStatus(`DOUBLE CHECK CONCLUÍDO! Todos os ${todosDados.length} itens conferidos!`, 'success');
         }
       }
 
       inputSerial.value = '';
       inputSerial.focus();
+    }
+
+    function ativarTelaVermelha(mensagem) {
+      emEstadoDeErro = true;
+      document.body.classList.add('error-state');
+      document.getElementById('inputSerial').disabled = true;
+      tocarSomErro();
+
+      // Configura Pop-up em modo erro exigindo toque manual
+      document.getElementById('modalHeaderTitulo').innerText = "ERRO DE VALIDAÇÃO";
+      document.getElementById('modalHeaderTitulo').className = "modal-header error-header";
+      document.getElementById('mensagemErroManual').innerText = mensagem;
+      document.getElementById('containerAcaoManual').style.display = 'block';
+      document.getElementById('modalFooterPadrao').style.display = 'none';
+
+      // Limpa dados exibidos no fundo do pop-up por segurança
+      document.getElementById('detalheSerial').innerText = "-";
+      document.getElementById('detalheFert').innerText = "-";
+      document.getElementById('detalheCor').innerText = "-";
+      document.getElementById('detalheOv').innerText = "-";
+      document.getElementById('detalheLacre').innerText = "-";
+
+      document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function resolverErroManual() {
+      emEstadoDeErro = false;
+      document.body.classList.remove('error-state');
+      document.getElementById('modalDetalhes').style.display = 'none';
+      
+      const inputSerial = document.getElementById('inputSerial');
+      inputSerial.disabled = false;
+      inputSerial.focus();
+      exibirStatus('Retome a leitura dos seriais...', 'info');
+    }
+
+    function abrirModalDetalhes(serial) {
+      if (emEstadoDeErro) return;
+
+      const item = todosDados.find(i => i.serial === serial);
+      if (!item) return;
+
+      document.getElementById('modalHeaderTitulo').innerText = "Detalhes do Item";
+      document.getElementById('modalHeaderTitulo').className = "modal-header";
+      document.getElementById('containerAcaoManual').style.display = 'none';
+      document.getElementById('modalFooterPadrao').style.display = 'block';
+
+      document.getElementById('detalheSerial').innerText = item.serial || '-';
+      document.getElementById('detalheFert').innerText = item.fert || '-';
+      document.getElementById('detalheCor').innerText = item.cor || '-';
+      document.getElementById('detalheOv').innerText = item.ov || item.container || '-';
+      document.getElementById('detalheLacre').innerText = item.lacre || '-';
+
+      document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function fecharModal() {
+      if (!emEstadoDeErro) {
+        document.getElementById('modalDetalhes').style.display = 'none';
+      }
     }
 
     function atualizarTela() {
@@ -489,27 +648,21 @@
     }
 
     function atualizarMetricas() {
-      const total = todosDados.length;
-      const lidos = seriaisValidados.size;
-      const pendentes = total - lidos;
-
-      document.getElementById('metricaTotal').innerText = total;
-      document.getElementById('metricaLidos').innerText = lidos;
-      document.getElementById('metricaPendentes').innerText = pendentes;
+      document.getElementById('metricaTotal').innerText = todosDados.length;
+      document.getElementById('metricaLidos').innerText = seriaisValidados.size;
+      document.getElementById('metricaPendentes').innerText = todosDados.length - seriaisValidados.size;
     }
 
     function renderizarTabela() {
       const corpoTabela = document.getElementById('tabelaCorpo');
-
       corpoTabela.innerHTML = todosDados.map(item => {
         const isOk = seriaisValidados.has(item.serial);
-        const rowClass = isOk ? 'row-checked' : '';
         const badge = isOk 
           ? '<span class="status-badge badge-ok">CONFERIDO</span>' 
           : '<span class="status-badge badge-pendente">PENDENTE</span>';
 
         return `
-          <tr class="${rowClass}">
+          <tr class="${isOk ? 'row-checked' : ''}" onclick="abrirModalDetalhes('${item.serial}')">
             <td>${badge}</td>
             <td><strong>${item.serial || '-'}</strong></td>
             <td>${item.fert || '-'}</td>
@@ -521,19 +674,16 @@
       }).join('');
     }
 
-    // Sinal sonoro simples via Web Audio API (sem dependências externas)
     function tocarSomErro() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, ctx.currentTime);
+        osc.frequency.setValueAtTime(140, ctx.currentTime);
         osc.connect(ctx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + 0.3);
-      } catch (e) {
-        /* Navegador não suportou áudio autônomo */
-      }
+        osc.stop(ctx.currentTime + 0.4);
+      } catch (e) {}
     }
   </script>
 </body>
