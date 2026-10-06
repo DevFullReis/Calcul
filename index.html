@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consulta de Rastreabilidade | Jabil</title>
+  <title>Sistema de Double Check | Jabil</title>
   <style>
     :root {
       --primary: #005288;      /* Azul Jabil */
       --primary-dark: #003a60; 
       --accent-blue: #3CB4E5;  /* Azul Claro Jabil */
       --accent-green: #008A5E; /* Verde Jabil */
+      --danger: #e11d48;       /* Vermelho Erro */
+      --warning: #f59e0b;      /* Amarelo Alerta */
       --bg-color: #f4f6f9;
       --surface: #ffffff;
       --text-main: #1e293b;
@@ -37,7 +39,7 @@
     header {
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
-      padding: 24px 20px;
+      padding: 20px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
@@ -82,44 +84,62 @@
       color: var(--accent-blue);
     }
 
-    /* Container Principal */
+    /* Layout Principal */
     main {
       flex: 1;
       max-width: 1200px;
       width: 100%;
-      margin: 24px auto;
-      padding: 0 20px;
+      margin: 20px auto;
+      padding: 0 16px;
     }
 
-    /* Caixa de Pesquisa Unificada */
-    .search-card {
-      background: var(--surface);
-      padding: 24px;
-      border-radius: var(--radius);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
-      border: 1px solid var(--border);
-      margin-bottom: 24px;
+    /* Cards de Etapas */
+    .steps-grid {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr 1fr;
       gap: 16px;
-      align-items: center;
+      margin-bottom: 20px;
     }
 
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .card {
+      background: var(--surface);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
     }
 
-    .input-group label {
-      font-size: 0.8rem;
-      font-weight: 600;
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-step {
+      background: var(--primary);
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
     }
 
     input {
+      width: 100%;
       padding: 12px 14px;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -135,47 +155,71 @@
       box-shadow: 0 0 0 3px rgba(60, 180, 229, 0.15);
     }
 
-    button.btn-search {
+    button.btn-action {
       background-color: var(--accent-green);
       color: white;
       border: none;
       border-radius: 6px;
-      padding: 12px 28px;
+      padding: 12px 20px;
       font-weight: 600;
       font-size: 0.95rem;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      align-self: flex-end;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 2px 4px rgba(0, 138, 94, 0.2);
+      white-space: nowrap;
+      transition: background-color 0.2s;
     }
 
-    button.btn-search:hover {
+    button.btn-action:hover {
       background-color: #00704b;
     }
 
-    button.btn-search:active {
-      transform: scale(0.98);
+    /* Métricas do Double Check */
+    .metrics-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
-    button:disabled {
-      background-color: #94a3b8 !important;
-      cursor: not-allowed;
-      box-shadow: none;
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
     }
 
-    /* Feedback de Status */
+    .metric-card .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .metric-card .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .val-totais { color: var(--primary); }
+    .val-lidos { color: var(--accent-green); }
+    .val-pendentes { color: var(--warning); }
+
+    /* Mensagem de Feedback */
     #status {
-      font-weight: 500;
-      font-size: 0.95rem;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 12px 16px;
+      border-radius: 6px;
       margin-bottom: 16px;
-      padding: 0 4px;
+      display: none;
     }
 
-    /* Área de Resultados e Tabela Responsiva */
+    .status-info { background: #e0f2fe; color: #0369a1; }
+    .status-success { background: #dcfce7; color: #15803d; }
+    .status-error { background: #ffe4e6; color: #be123c; }
+
+    /* Tabela de Resultados */
     .results-wrapper {
       background: var(--surface);
       border-radius: var(--radius);
@@ -188,7 +232,6 @@
     .table-responsive {
       width: 100%;
       overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
     }
 
     table {
@@ -210,81 +253,43 @@
       border-bottom: 2px solid var(--border);
       text-transform: uppercase;
       font-size: 0.75rem;
-      letter-spacing: 0.05em;
     }
 
     td {
       border-bottom: 1px solid var(--border);
-      color: var(--text-main);
     }
 
-    tr:last-child td {
-      border-bottom: none;
+    /* Badges de Status do Item */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
     }
 
-    tr:hover td {
-      background-color: #f1f5f9;
+    .badge-pendente {
+      background: #fef3c7;
+      color: #b45309;
     }
 
-    /* Paginação Moderna */
-    .pagination-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      background: #fafafa;
-      border-top: 1px solid var(--border);
-      flex-wrap: wrap;
-      gap: 12px;
+    .badge-ok {
+      background: #dcfce7;
+      color: #15803d;
     }
 
-    .pagination-info {
-      font-size: 0.875rem;
-      color: var(--text-muted);
+    tr.row-checked {
+      background-color: #f0fdf4;
     }
 
-    .pagination-buttons {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-page {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--primary);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-page:hover:not(:disabled) {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    /* Ajustes Mobile Específicos */
+    /* Responsive Mobile */
     @media (max-width: 768px) {
-      .search-card {
+      .steps-grid {
         grid-template-columns: 1fr;
-        padding: 16px;
       }
-      
-      button.btn-search {
-        width: 100%;
-        margin-top: 4px;
-      }
-
-      header {
-        padding: 16px;
-      }
-      
-      main {
-        padding: 0 12px;
-        margin: 12px auto;
+      .metrics-bar {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -296,34 +301,66 @@
       <div class="brand">
         <div class="brand-logo">J</div>
         <div>
-          <h1>Rastreabilidade de Produção</h1>
-          <p>Sistema Integrado de Consulta</p>
+          <h1>Validação Double Check</h1>
+          <p>Conferência e Rastreabilidade de Embarque</p>
         </div>
       </div>
     </div>
   </header>
 
   <main>
-    <!-- Filtro Único de Busca -->
-    <div class="search-card">
-      <div class="input-group">
-        <label for="inputBusca">OV (Ordem de Venda) ou Container</label>
-        <input type="text" id="inputBusca" placeholder="Digite a OV ou Container (ex: OV9876 ou CARRETA - UBY8G09)" onkeypress="tratarTecla(event)">
+    <!-- Etapas do Double Check -->
+    <div class="steps-grid">
+      <!-- Passo 1: Carregar Lote/OV -->
+      <div class="card">
+        <div class="card-title">
+          <span class="badge-step">1</span>
+          Carregar OV / Container
+        </div>
+        <div class="input-row">
+          <input type="text" id="inputBusca" placeholder="Informe a OV ou Container" onkeypress="tratarTeclaOV(event)">
+          <button class="btn-action" onclick="carregarLote()">Carregar</button>
+        </div>
       </div>
-      <button class="btn-search" onclick="buscar()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        Pesquisar
-      </button>
+
+      <!-- Passo 2: Biper Serial -->
+      <div class="card">
+        <div class="card-title">
+          <span class="badge-step">2</span>
+          Bipar Serial (Escanear)
+        </div>
+        <div class="input-row">
+          <input type="text" id="inputSerial" placeholder="Aguardando carregamento da OV..." disabled onkeypress="tratarTeclaSerial(event)">
+        </div>
+      </div>
     </div>
 
-    <div id="status">Insira a OV ou Container acima para carregar os registros.</div>
+    <!-- Feedback Visual de Alerta -->
+    <div id="status"></div>
 
-    <!-- Tabela & Paginação -->
+    <!-- Painel de Métricas -->
+    <div class="metrics-bar" id="painelMetricas" style="display: none;">
+      <div class="metric-card">
+        <div class="label">Total de Itens</div>
+        <div class="value val-totais" id="metricaTotal">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Validados (OK)</div>
+        <div class="value val-lidos" id="metricaLidos">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Pendentes</div>
+        <div class="value val-pendentes" id="metricaPendentes">0</div>
+      </div>
+    </div>
+
+    <!-- Tabela de Conferência -->
     <div id="resultadoContainer" class="results-wrapper">
       <div class="table-responsive">
         <table>
           <thead>
             <tr>
+              <th>Status Check</th>
               <th>Serial</th>
               <th>FERT</th>
               <th>Cor</th>
@@ -334,119 +371,169 @@
           <tbody id="tabelaCorpo"></tbody>
         </table>
       </div>
-
-      <div class="pagination-bar">
-        <span class="pagination-info" id="paginacaoInfo">Página 1 de 1</span>
-        <div class="pagination-buttons">
-          <button class="btn-page" id="btnAnterior" onclick="mudarPagina(-1)">Anterior</button>
-          <button class="btn-page" id="btnProximo" onclick="mudarPagina(1)">Próximo</button>
-        </div>
-      </div>
     </div>
   </main>
 
   <script>
     let todosDados = [];
-    let paginaAtual = 1;
-    const itensPorPagina = 15;
+    let seriaisValidados = new Set();
 
-    function tratarTecla(e) {
-      if (e.key === 'Enter') {
-        buscar();
-      }
+    function exibirStatus(mensagem, tipo) {
+      const statusEl = document.getElementById('status');
+      statusEl.style.display = 'block';
+      statusEl.innerText = mensagem;
+      statusEl.className = '';
+      
+      if (tipo === 'success') statusEl.classList.add('status-success');
+      else if (tipo === 'error') statusEl.classList.add('status-error');
+      else statusEl.classList.add('status-info');
     }
 
-    async function buscar() {
+    function tratarTeclaOV(e) {
+      if (e.key === 'Enter') carregarLote();
+    }
+
+    function tratarTeclaSerial(e) {
+      if (e.key === 'Enter') validarSerial();
+    }
+
+    async function carregarLote() {
       const valorBusca = document.getElementById('inputBusca').value.trim();
-      const statusEl = document.getElementById('status');
+      const inputSerial = document.getElementById('inputSerial');
       const resultadoContainer = document.getElementById('resultadoContainer');
+      const painelMetricas = document.getElementById('painelMetricas');
 
       if (!valorBusca) {
-        statusEl.innerText = 'Por favor, informe a OV (Ordem de Venda) ou Container para pesquisar.';
-        statusEl.style.color = '#dc2626';
-        resultadoContainer.style.display = 'none';
+        exibirStatus('Informe uma OV ou Container para iniciar a conferência.', 'error');
         return;
       }
 
-      statusEl.innerText = 'Consultando base de dados...';
-      statusEl.style.color = 'var(--primary)';
+      exibirStatus('Carregando itens da OV/Container...', 'info');
       resultadoContainer.style.display = 'none';
+      painelMetricas.style.display = 'none';
+      seriaisValidados.clear();
 
       try {
         const params = new URLSearchParams();
-        // Envia o valor tanto para 'ov' quanto para 'container' no backend
         params.append('ov', valorBusca);
         params.append('container', valorBusca);
 
         const resposta = await fetch(`/api/consultar?${params.toString()}`);
-        const textoResposta = await resposta.text();
-        let dados;
+        const dados = await resposta.json();
 
-        try {
-          dados = JSON.parse(textoResposta);
-        } catch (e) {
-          throw new Error(`Erro de resposta do servidor: ${textoResposta.substring(0, 80)}...`);
-        }
-
-        if (!resposta.ok) {
-          throw new Error(dados.error || 'Erro ao realizar a consulta');
-        }
+        if (!resposta.ok) throw new Error(dados.error || 'Erro ao consultar servidor');
 
         if (!dados || dados.length === 0) {
-          statusEl.innerText = 'Nenhum registro encontrado para este termo.';
-          statusEl.style.color = 'var(--text-muted)';
+          exibirStatus('Nenhum lote/item encontrado para esta OV ou Container.', 'error');
+          inputSerial.disabled = true;
+          inputSerial.placeholder = "Aguardando carregamento da OV...";
           return;
         }
 
         todosDados = dados;
-        paginaAtual = 1;
+        
+        // Habilita entrada de bip de serial
+        inputSerial.disabled = false;
+        inputSerial.placeholder = "Bipe o Serial do produto aqui...";
+        inputSerial.focus();
 
-        statusEl.innerText = `Consulta concluída com sucesso. Total de ${dados.length} registro(s) encontrado(s).`;
-        statusEl.style.color = 'var(--accent-green)';
-
+        exibirStatus(`Lote carregado com sucesso. Bipe os ${dados.length} seriais para validar.`, 'info');
+        
         resultadoContainer.style.display = 'block';
-        renderizarTabela();
+        painelMetricas.style.display = 'grid';
+        
+        atualizarTela();
 
       } catch (err) {
         console.error(err);
-        statusEl.innerText = 'Erro na operação: ' + err.message;
-        statusEl.style.color = '#dc2626';
+        exibirStatus('Erro ao carregar OV: ' + err.message, 'error');
       }
+    }
+
+    function validarSerial() {
+      const inputSerial = document.getElementById('inputSerial');
+      const serialBipado = inputSerial.value.trim();
+
+      if (!serialBipado) return;
+
+      // Procura o serial na lista carregada
+      const itemEncontrado = todosDados.find(item => 
+        item.serial && item.serial.toLowerCase() === serialBipado.toLowerCase()
+      );
+
+      if (!itemEncontrado) {
+        exibirStatus(`DIVERGÊNCIA! O Serial "${serialBipado}" NÃO pertence a esta OV/Container!`, 'error');
+        tocarSomErro();
+      } else if (seriaisValidados.has(itemEncontrado.serial)) {
+        exibirStatus(`ALERTA: O Serial "${serialBipado}" JÁ foi bipado anteriormente!`, 'error');
+        tocarSomErro();
+      } else {
+        // Sucesso na validação do serial
+        seriaisValidados.add(itemEncontrado.serial);
+        exibirStatus(`OK! Serial "${itemEncontrado.serial}" validado com sucesso.`, 'success');
+        atualizarTela();
+
+        // Checa se concluiu 100%
+        if (seriaisValidados.size === todosDados.length) {
+          exibirStatus(`DOUBLE CHECK CONCLUÍDO! Todos os ${todosDados.length} itens foram conferidos com sucesso!`, 'success');
+        }
+      }
+
+      inputSerial.value = '';
+      inputSerial.focus();
+    }
+
+    function atualizarTela() {
+      renderizarTabela();
+      atualizarMetricas();
+    }
+
+    function atualizarMetricas() {
+      const total = todosDados.length;
+      const lidos = seriaisValidados.size;
+      const pendentes = total - lidos;
+
+      document.getElementById('metricaTotal').innerText = total;
+      document.getElementById('metricaLidos').innerText = lidos;
+      document.getElementById('metricaPendentes').innerText = pendentes;
     }
 
     function renderizarTabela() {
       const corpoTabela = document.getElementById('tabelaCorpo');
-      const infoEl = document.getElementById('paginacaoInfo');
-      const btnAnterior = document.getElementById('btnAnterior');
-      const btnProximo = document.getElementById('btnProximo');
 
-      const inicio = (paginaAtual - 1) * itensPorPagina;
-      const fim = inicio + itensPorPagina;
-      const dadosPagina = todosDados.slice(inicio, fim);
-      const totalPaginas = Math.ceil(todosDados.length / itensPorPagina);
+      corpoTabela.innerHTML = todosDados.map(item => {
+        const isOk = seriaisValidados.has(item.serial);
+        const rowClass = isOk ? 'row-checked' : '';
+        const badge = isOk 
+          ? '<span class="status-badge badge-ok">CONFERIDO</span>' 
+          : '<span class="status-badge badge-pendente">PENDENTE</span>';
 
-      corpoTabela.innerHTML = dadosPagina.map(item => `
-        <tr>
-          <td><strong>${item.serial || '-'}</strong></td>
-          <td>${item.fert || '-'}</td>
-          <td>${item.cor || '-'}</td>
-          <td>${item.ov || item.container || '-'}</td>
-          <td>${item.lacre || '-'}</td>
-        </tr>
-      `).join('');
-
-      infoEl.innerText = `Página ${paginaAtual} de ${totalPaginas} (${todosDados.length} itens no total)`;
-      btnAnterior.disabled = paginaAtual === 1;
-      btnProximo.disabled = paginaAtual >= totalPaginas;
+        return `
+          <tr class="${rowClass}">
+            <td>${badge}</td>
+            <td><strong>${item.serial || '-'}</strong></td>
+            <td>${item.fert || '-'}</td>
+            <td>${item.cor || '-'}</td>
+            <td>${item.ov || item.container || '-'}</td>
+            <td>${item.lacre || '-'}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    function mudarPagina(direcao) {
-      const totalPaginas = Math.ceil(todosDados.length / itensPorPagina);
-      paginaAtual += direcao;
-      if (paginaAtual < 1) paginaAtual = 1;
-      if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
-      renderizarTabela();
-      window.scrollTo({ top: 300, behavior: 'smooth' });
+    // Sinal sonoro simples via Web Audio API (sem dependências externas)
+    function tocarSomErro() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, ctx.currentTime);
+        osc.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      } catch (e) {
+        /* Navegador não suportou áudio autônomo */
+      }
     }
   </script>
 </body>
