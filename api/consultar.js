@@ -1,50 +1,45 @@
-// api/consultar.js
-import { createClient } from '@supabase/supabase-js'
+import { Client } from 'pg';
 
 export default async function handler(req, res) {
-  res.setHeader('Content-Type', 'application/json')
-
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  // 1. Valida se as variáveis existem na Vercel
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return res.status(500).json({ 
-      error: `Variáveis ausentes! SUPABASE_URL: ${supabaseUrl ? 'OK' : 'FALTANDO'} | SERVICE_ROLE_KEY: ${supabaseServiceKey ? 'OK' : 'FALTANDO'}` 
-    })
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { container, ov } = req.query
+  const { container, ov } = req.query;
 
   if (!container && !ov) {
-    return res.status(400).json({ 
-      error: 'Informe ao menos um parâmetro de busca: container ou ov.' 
-    })
+    return res.status(400).json({ error: 'Informe container ou ov para busca.' });
   }
 
+  // Conecta ao banco usando a variável de ambiente segura da Vercel
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+
   try {
-    // 2. Inicializa o cliente do Supabase
-    const supabase = createClient(supabaseUrl.trim(), supabaseServiceKey.trim())
+    await client.connect();
 
-    let query = supabase.from('b_data').select('*')
+    let queryText = 'SELECT serial, fert, cor, container, ov, lacre FROM sua_tabela WHERE ';
+    const queryParams = [];
 
-    if (container) query = query.eq('container', container.trim())
-    if (ov) query = query.eq('ov', ov.trim())
-
-    const { data, error } = await query
-
-    // 3. Se o Supabase retornar um erro de autenticação/permissão/tabela
-    if (error) {
-      return res.status(400).json({ error: `Erro na consulta Supabase: ${error.message}` })
+    if (container && ov) {
+      queryText += 'container = $1 AND ov = $2';
+      queryParams.push(container, ov);
+    } else if (container) {
+      queryText += 'container = $1';
+      queryParams.push(container);
+    } else {
+      queryText += 'ov = $1';
+      queryParams.push(ov);
     }
 
-    return res.status(200).json(data)
+    const result = await client.query(queryText, queryParams);
+    await client.end();
 
-  } catch (err) {
-    // 4. Captura erro exato da conexão HTTP/Node.js
-    console.error('Erro de Execução:', err)
-    return res.status(500).json({ 
-      error: `Erro de conexão: ${err.message || err}` 
-    })
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Erro na consulta:', error);
+    return res.status(500).json({ error: 'Erro interno ao consultar o banco de dados.' });
   }
 }
