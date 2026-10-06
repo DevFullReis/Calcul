@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    let queryText = 'SELECT serial, fert, cor, container, ov, lacre FROM sua_tabela WHERE ';
+    let queryText = 'SELECT serial, fert, cor, container, ov, lacre FROM b_data WHERE ';
     const queryParams = [];
 
     if (container && ov) {
