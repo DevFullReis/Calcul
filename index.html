@@ -3,164 +3,374 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Busca Específica - b_data</title>
+  <title>Consulta de Rastreabilidade | Jabil</title>
   <style>
+    :root {
+      --primary: #005288;      /* Azul Jabil */
+      --primary-dark: #003a60; 
+      --accent-blue: #3CB4E5;  /* Azul Claro Jabil */
+      --accent-green: #008A5E; /* Verde Jabil */
+      --bg-color: #f4f6f9;
+      --surface: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #f8fafc;
-      color: #334155;
-      padding: 20px;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    .search-box {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      margin-bottom: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      flex-direction: column;
     }
+
+    /* Header Corporativo Moderno */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 24px 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-green);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: var(--accent-blue);
+    }
+
+    /* Container Principal */
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+
+    /* Caixa de Pesquisa Estilizada */
+    .search-card {
+      background: var(--surface);
+      padding: 24px;
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
     input {
-      padding: 8px 12px;
-      border: 1px solid #cbd5e1;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 0.95rem;
-      flex: 1;
-      min-width: 180px;
+      transition: all 0.2s ease;
+      background: #fafafa;
     }
-    button {
-      padding: 8px 16px;
-      background-color: #0284c7;
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(60, 180, 229, 0.15);
+    }
+
+    button.btn-search {
+      background-color: var(--accent-green);
       color: white;
       border: none;
       border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0369a1;
-    }
-    button:disabled {
-      background-color: #94a3b8;
-      cursor: not-allowed;
-    }
-    #status {
+      padding: 12px 24px;
       font-weight: 600;
-      margin-bottom: 15px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      align-self: flex-end;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(0, 138, 94, 0.2);
     }
-    .table-container {
+
+    button.btn-search:hover {
+      background-color: #00704b;
+    }
+
+    button.btn-search:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      background-color: #94a3b8 !important;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Feedback de Status */
+    #status {
+      font-weight: 500;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    /* Área de Resultados e Tabela Responsiva */
+    .results-wrapper {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+      display: none;
+      overflow: hidden;
+    }
+
+    .table-responsive {
+      width: 100%;
       overflow-x: auto;
-      background: #ffffff;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      -webkit-overflow-scrolling: touch;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 14px 18px;
       font-size: 0.9rem;
     }
-    th, td {
-      padding: 12px 16px;
-      border-bottom: 1px solid #e2e8f0;
-    }
+
     th {
-      background-color: #f1f5f9;
-      color: #475569;
+      background-color: #f8fafc;
+      color: var(--primary);
       font-weight: 700;
+      border-bottom: 2px solid var(--border);
       text-transform: uppercase;
       font-size: 0.75rem;
       letter-spacing: 0.05em;
     }
-    tr:hover {
-      background-color: #f8fafc;
+
+    td {
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
     }
-    .pagination {
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: #f1f5f9;
+    }
+
+    /* Paginação Moderna */
+    .pagination-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 15px;
-      padding: 10px 0;
+      padding: 16px 20px;
+      background: #fafafa;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
     }
+
     .pagination-info {
-      font-size: 0.9rem;
-      color: #64748b;
+      font-size: 0.875rem;
+      color: var(--text-muted);
     }
-    .pagination-btns {
+
+    .pagination-buttons {
       display: flex;
       gap: 8px;
     }
+
     .btn-page {
-      padding: 6px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 6px;
       font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-page:hover:not(:disabled) {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Ajustes Mobile Específicos */
+    @media (max-width: 768px) {
+      .search-card {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+      
+      button.btn-search {
+        width: 100%;
+        margin-top: 4px;
+      }
+
+      header {
+        padding: 16px;
+      }
+      
+      main {
+        padding: 0 12px;
+        margin: 12px auto;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h1>Consulta por Container ou OV</h1>
-
-  <div class="search-box">
-    <input type="text" id="inputContainer" placeholder="Digite o Container (ex: CONT123)">
-    <input type="text" id="inputOV" placeholder="Digite a OV (ex: OV9876)">
-    <button onclick="buscar()">Pesquisar</button>
-  </div>
-
-  <div id="status">Digite um Container ou OV acima para buscar.</div>
-  
-  <div id="containerResultados" style="display: none;">
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Serial</th>
-            <th>FERT</th>
-            <th>Cor</th>
-            <th>Container</th>
-            <th>OV</th>
-            <th>Lacre</th>
-          </tr>
-        </thead>
-        <tbody id="tabelaCorpo"></tbody>
-      </table>
-    </div>
-
-    <!-- Controles da Paginação -->
-    <div class="pagination">
-      <span class="pagination-info" id="paginacaoInfo"></span>
-      <div class="pagination-btns">
-        <button class="btn-page" id="btnAnterior" onclick="mudarPagina(-1)">Anterior</button>
-        <button class="btn-page" id="btnProximo" onclick="mudarPagina(1)">Próximo</button>
+  <header>
+    <div class="header-content">
+      <div class="brand">
+        <div class="brand-logo">J</div>
+        <div>
+          <h1>Rastreabilidade de Produção</h1>
+          <p>Sistema Integrado de Consulta</p>
+        </div>
       </div>
     </div>
-  </div>
+  </header>
+
+  <main>
+    <!-- Filtros de Busca -->
+    <div class="search-card">
+      <div class="input-group">
+        <label for="inputContainer">Container</label>
+        <input type="text" id="inputContainer" placeholder="Ex: CARRETA - UBY8G09">
+      </div>
+      <div class="input-group">
+        <label for="inputOV">OV (Ordem de Venda)</label>
+        <input type="text" id="inputOV" placeholder="Ex: OV9876">
+      </div>
+      <button class="btn-search" onclick="buscar()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Pesquisar
+      </button>
+    </div>
+
+    <div id="status">Insira os critérios de busca acima para carregar os registros.</div>
+
+    <!-- Tabela & Paginação -->
+    <div id="resultadoContainer" class="results-wrapper">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Serial</th>
+              <th>FERT</th>
+              <th>Cor</th>
+              <th>Container</th>
+              <th>OV</th>
+              <th>Lacre</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaCorpo"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar">
+        <span class="pagination-info" id="paginacaoInfo">Página 1 de 1</span>
+        <div class="pagination-buttons">
+          <button class="btn-page" id="btnAnterior" onclick="mudarPagina(-1)">Anterior</button>
+          <button class="btn-page" id="btnProximo" onclick="mudarPagina(1)">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script>
-    // Variáveis globais para controle de estado
     let todosDados = [];
     let paginaAtual = 1;
-    const itensPorPagina = 10;
+    const itensPorPagina = 15; // Exibe 15 itens por página para melhor aproveitamento em desktop/mobile
 
     async function buscar() {
       const containerVal = document.getElementById('inputContainer').value.trim();
       const ovVal = document.getElementById('inputOV').value.trim();
       const statusEl = document.getElementById('status');
-      const containerResultados = document.getElementById('containerResultados');
+      const resultadoContainer = document.getElementById('resultadoContainer');
 
       if (!containerVal && !ovVal) {
-        statusEl.innerText = 'Preencha o campo Container ou OV para realizar a busca.';
+        statusEl.innerText = 'Por favor, preencha o campo Container ou OV para realizar a busca.';
         statusEl.style.color = '#dc2626';
-        containerResultados.style.display = 'none';
+        resultadoContainer.style.display = 'none';
         return;
       }
 
-      statusEl.innerText = 'Consultando no servidor...';
-      statusEl.style.color = '#0284c7';
-      containerResultados.style.display = 'none';
+      statusEl.innerText = 'Consultando base de dados...';
+      statusEl.style.color = 'var(--primary)';
+      resultadoContainer.style.display = 'none';
 
       try {
         const params = new URLSearchParams();
@@ -174,7 +384,7 @@
         try {
           dados = JSON.parse(textoResposta);
         } catch (e) {
-          throw new Error(`Resposta do servidor inválida: ${textoResposta.substring(0, 100)}...`);
+          throw new Error(`Erro de resposta do servidor: ${textoResposta.substring(0, 80)}...`);
         }
 
         if (!resposta.ok) {
@@ -182,24 +392,23 @@
         }
 
         if (!dados || dados.length === 0) {
-          statusEl.innerText = 'Nenhum registro encontrado para essa busca.';
-          statusEl.style.color = '#64748b';
+          statusEl.innerText = 'Nenhum registro encontrado para os filtros informados.';
+          statusEl.style.color = 'var(--text-muted)';
           return;
         }
 
-        // Armazena todos os registros e reseta para a primeira página
         todosDados = dados;
         paginaAtual = 1;
 
-        statusEl.innerText = `Sucesso! ${dados.length} registro(s) encontrado(s):`;
-        statusEl.style.color = '#16a34a';
+        statusEl.innerText = `Consulta concluída com sucesso. Total de ${dados.length} registro(s) encontrado(s).`;
+        statusEl.style.color = 'var(--accent-green)';
 
-        containerResultados.style.display = 'block';
+        resultadoContainer.style.display = 'block';
         renderizarTabela();
 
       } catch (err) {
         console.error(err);
-        statusEl.innerText = 'Erro: ' + err.message;
+        statusEl.innerText = 'Erro na operação: ' + err.message;
         statusEl.style.color = '#dc2626';
       }
     }
@@ -210,13 +419,11 @@
       const btnAnterior = document.getElementById('btnAnterior');
       const btnProximo = document.getElementById('btnProximo');
 
-      // Cálculo do slice dos dados
       const inicio = (paginaAtual - 1) * itensPorPagina;
       const fim = inicio + itensPorPagina;
       const dadosPagina = todosDados.slice(inicio, fim);
       const totalPaginas = Math.ceil(todosDados.length / itensPorPagina);
 
-      // Renderiza as linhas
       corpoTabela.innerHTML = dadosPagina.map(item => `
         <tr>
           <td><strong>${item.serial || '-'}</strong></td>
@@ -228,15 +435,18 @@
         </tr>
       `).join('');
 
-      // Atualiza estado dos botões e texto da página
       infoEl.innerText = `Página ${paginaAtual} de ${totalPaginas} (${todosDados.length} itens no total)`;
       btnAnterior.disabled = paginaAtual === 1;
-      btnProximo.disabled = paginaAtual === totalPaginas;
+      btnProximo.disabled = paginaAtual === paginaAtual >= totalPaginas;
     }
 
     function mudarPagina(direcao) {
+      const totalPaginas = Math.ceil(todosDados.length / itensPorPagina);
       paginaAtual += direcao;
+      if (paginaAtual < 1) paginaAtual = 1;
+      if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
       renderizarTabela();
+      window.scrollTo({ top: 300, behavior: 'smooth' });
     }
   </script>
 </body>
