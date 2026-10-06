@@ -91,7 +91,7 @@
       padding: 0 20px;
     }
 
-    /* Caixa de Pesquisa Estilizada */
+    /* Caixa de Pesquisa Unificada */
     .search-card {
       background: var(--surface);
       padding: 24px;
@@ -100,7 +100,7 @@
       border: 1px solid var(--border);
       margin-bottom: 24px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) auto;
+      grid-template-columns: 1fr auto;
       gap: 16px;
       align-items: center;
     }
@@ -120,7 +120,7 @@
     }
 
     input {
-      padding: 10px 14px;
+      padding: 12px 14px;
       border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 0.95rem;
@@ -140,7 +140,7 @@
       color: white;
       border: none;
       border-radius: 6px;
-      padding: 12px 24px;
+      padding: 12px 28px;
       font-weight: 600;
       font-size: 0.95rem;
       cursor: pointer;
@@ -304,15 +304,11 @@
   </header>
 
   <main>
-    <!-- Filtros de Busca -->
+    <!-- Filtro Único de Busca -->
     <div class="search-card">
       <div class="input-group">
-        <label for="inputContainer">Container</label>
-        <input type="text" id="inputContainer" placeholder="Ex: CARRETA - UBY8G09">
-      </div>
-      <div class="input-group">
-        <label for="inputOV">OV (Ordem de Venda)</label>
-        <input type="text" id="inputOV" placeholder="Ex: OV9876">
+        <label for="inputBusca">OV (Ordem de Venda) ou Container</label>
+        <input type="text" id="inputBusca" placeholder="Digite a OV ou Container (ex: OV9876 ou CARRETA - UBY8G09)" onkeypress="tratarTecla(event)">
       </div>
       <button class="btn-search" onclick="buscar()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -320,7 +316,7 @@
       </button>
     </div>
 
-    <div id="status">Insira os critérios de busca acima para carregar os registros.</div>
+    <div id="status">Insira a OV ou Container acima para carregar os registros.</div>
 
     <!-- Tabela & Paginação -->
     <div id="resultadoContainer" class="results-wrapper">
@@ -331,8 +327,7 @@
               <th>Serial</th>
               <th>FERT</th>
               <th>Cor</th>
-              <th>Container</th>
-              <th>OV</th>
+              <th>OV / Container</th>
               <th>Lacre</th>
             </tr>
           </thead>
@@ -353,16 +348,21 @@
   <script>
     let todosDados = [];
     let paginaAtual = 1;
-    const itensPorPagina = 15; // Exibe 15 itens por página para melhor aproveitamento em desktop/mobile
+    const itensPorPagina = 15;
+
+    function tratarTecla(e) {
+      if (e.key === 'Enter') {
+        buscar();
+      }
+    }
 
     async function buscar() {
-      const containerVal = document.getElementById('inputContainer').value.trim();
-      const ovVal = document.getElementById('inputOV').value.trim();
+      const valorBusca = document.getElementById('inputBusca').value.trim();
       const statusEl = document.getElementById('status');
       const resultadoContainer = document.getElementById('resultadoContainer');
 
-      if (!containerVal && !ovVal) {
-        statusEl.innerText = 'Por favor, preencha o campo Container ou OV para realizar a busca.';
+      if (!valorBusca) {
+        statusEl.innerText = 'Por favor, informe a OV (Ordem de Venda) ou Container para pesquisar.';
         statusEl.style.color = '#dc2626';
         resultadoContainer.style.display = 'none';
         return;
@@ -374,8 +374,9 @@
 
       try {
         const params = new URLSearchParams();
-        if (containerVal) params.append('container', containerVal);
-        if (ovVal) params.append('ov', ovVal);
+        // Envia o valor tanto para 'ov' quanto para 'container' no backend
+        params.append('ov', valorBusca);
+        params.append('container', valorBusca);
 
         const resposta = await fetch(`/api/consultar?${params.toString()}`);
         const textoResposta = await resposta.text();
@@ -392,7 +393,7 @@
         }
 
         if (!dados || dados.length === 0) {
-          statusEl.innerText = 'Nenhum registro encontrado para os filtros informados.';
+          statusEl.innerText = 'Nenhum registro encontrado para este termo.';
           statusEl.style.color = 'var(--text-muted)';
           return;
         }
@@ -429,15 +430,14 @@
           <td><strong>${item.serial || '-'}</strong></td>
           <td>${item.fert || '-'}</td>
           <td>${item.cor || '-'}</td>
-          <td>${item.container || '-'}</td>
-          <td>${item.ov || '-'}</td>
+          <td>${item.ov || item.container || '-'}</td>
           <td>${item.lacre || '-'}</td>
         </tr>
       `).join('');
 
       infoEl.innerText = `Página ${paginaAtual} de ${totalPaginas} (${todosDados.length} itens no total)`;
       btnAnterior.disabled = paginaAtual === 1;
-      btnProximo.disabled = paginaAtual === paginaAtual >= totalPaginas;
+      btnProximo.disabled = paginaAtual >= totalPaginas;
     }
 
     function mudarPagina(direcao) {
