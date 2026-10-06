@@ -1,4 +1,12 @@
-import { Client } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
+
+// Reaproveita o pool de conexões entre chamadas de função
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 1 // ideal para serverless na Vercel
+});
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -11,15 +19,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Informe container ou ov para busca.' });
   }
 
-  // Conecta ao banco usando a variável de ambiente segura da Vercel
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-
   try {
-    await client.connect();
-
     let queryText = 'SELECT serial, fert, cor, container, ov, lacre FROM sua_tabela WHERE ';
     const queryParams = [];
 
@@ -34,12 +34,10 @@ export default async function handler(req, res) {
       queryParams.push(ov);
     }
 
-    const result = await client.query(queryText, queryParams);
-    await client.end();
-
+    const result = await pool.query(queryText, queryParams);
     return res.status(200).json(result.rows);
   } catch (error) {
     console.error('Erro na consulta:', error);
-    return res.status(500).json({ error: 'Erro interno ao consultar o banco de dados.' });
+    return res.status(500).json({ error: error.message || 'Erro ao consultar o banco de dados.' });
   }
 }
